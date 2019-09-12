@@ -612,6 +612,13 @@ class Securimage
     public $database_name   = '';
 
     /**
+     * Port for database to select (mysql, postgres only)
+     *
+     * @var string
+     */
+    public $database_port   = '';
+
+    /**
      * Database table where captcha codes are stored
      *
      * Note: Securimage will attempt to create this table for you if it does
@@ -2863,9 +2870,10 @@ class Securimage
                     throw new Exception('Securimage::database_name is not set');
                 }
 
-                $dsn .= sprintf('host=%s;dbname=%s',
+                $dsn .= sprintf('host=%s;dbname=%s;port=%s',
                                 $this->database_host,
-                                $this->database_name);
+                                $this->database_name,
+                                $this->database_port);
                 break;
 
         }
