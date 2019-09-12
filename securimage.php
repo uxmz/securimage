@@ -1182,7 +1182,7 @@ class Securimage
     public static function getCaptchaId($new = true, array $options = array())
     {
         if (is_null($new) || (bool)$new == true) {
-            $id = sha1(uniqid($_SERVER['REMOTE_ADDR'], true));
+            $id = sha1(uniqid($this->clientIp(), true));
             $opts = array('no_session'    => true,
                           'use_database'  => true);
             if (sizeof($options) > 0) $opts = array_merge($options, $opts);
@@ -2708,7 +2708,7 @@ class Securimage
 
         if ($this->use_database && $this->pdo_conn) {
             $id = $this->getCaptchaId(false);
-            $ip = $_SERVER['REMOTE_ADDR'];
+            $ip = $this->clientIp();
 
             if (empty($id)) {
                 $id = $ip;
@@ -2760,7 +2760,7 @@ class Securimage
 
         if ($this->use_database && $this->pdo_conn) {
             $id = $this->getCaptchaId(false);
-            $ip = $_SERVER['REMOTE_ADDR'];
+            $ip = $this->clientIp();
             $ns = $this->namespace;
 
             if (empty($id)) {
@@ -3020,7 +3020,7 @@ class Securimage
                 $stmt   = $this->pdo_conn->prepare($query);
                 $result = $stmt->execute(array(Securimage::$_captchaId));
             } else {
-                $ip = $_SERVER['REMOTE_ADDR'];
+                $ip = $this->clientIp();
                 $ns = $this->namespace;
 
                 // ip is stored in id column when no captchaId
@@ -3063,7 +3063,7 @@ class Securimage
     protected function clearCodeFromDatabase()
     {
         if ($this->pdo_conn) {
-            $ip = $_SERVER['REMOTE_ADDR'];
+            $ip = $this->clientIp();
             $ns = $this->pdo_conn->quote($this->namespace);
             $id = Securimage::$_captchaId;
 
@@ -3640,6 +3640,19 @@ class Securimage
 
         return false;
     }
+
+    protected function clientIp($forwarded=true) {
+        $addr = !$forwarded || empty($_SERVER['X-Forwarded-For'])
+                    ? $_SERVER['REMOTE_ADDR']
+                    : trim(preg_replace('/,.*$/', '', $_SERVER['X-Forwarded-For']));
+
+
+        if (!preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/', $addr)) {
+            $addr = gethostbyname($addr);
+        }
+
+        return $addr;
+    }
 }
 
 
@@ -3775,4 +3788,5 @@ class Securimage_Color
         $this->g = hexdec($green);
         $this->b = hexdec($blue);
     }
+
 }
