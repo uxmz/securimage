@@ -237,3 +237,11 @@ $ git push --tags
 ```
 
 Create Release on GitHub
+
+### UXMZ Diff
+On Files:
+- securimage.php
+
+https://github.com/uxmz/securimage/commit/66793d2549a21fa6d1b462063d661627e47ae144
+https://github.com/uxmz/securimage/commit/f2919e729c1c36f044ae0557ca9059bf6c55f9ba
+https://github.com/uxmz/securimage/commit/2bc0cdb31473ab99b15824095cbc5e89782ec333
