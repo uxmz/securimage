@@ -220,3 +220,17 @@ LICENSES:
      If you use the sound effects, please consider giving us a credit and
      linking back to us but it's not required.
      
+
+## Sync Fork
+https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/merging-an-upstream-repository-into-your-fork
+
+```
+$ git pull upstream TAG_NANE
+$ git push
+
+$ git fetch -t upstream
+$ git remote update
+$ git push --tags
+```
+
+Create Release on GitHub
