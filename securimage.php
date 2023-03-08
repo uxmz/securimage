@@ -1024,6 +1024,13 @@ class Securimage
     protected $gdsignaturecolor;
 
     /**
+     * The Configuration file path
+     *
+     * @var string
+     */
+    protected $config_file;
+
+    /**
      * Create a new securimage object, pass options to set in the constructor.
      *
      * The object can then be used to display a captcha, play an audible captcha, or validate a submission.
