@@ -2265,9 +2265,9 @@ class Securimage
         $amp      = array(); // amplitude
         $x        = ($this->image_width / 4); // lowest x coordinate of a pole
         $maxX     = $this->image_width - $x;  // maximum x coordinate of a pole
-        $dx       = mt_rand($x / 10, $x);     // horizontal distance between poles
+        $dx       = mt_rand(floor($x / 10), ceil($x));     // horizontal distance between poles
         $y        = mt_rand(20, $this->image_height - 20);  // random y coord
-        $dy       = mt_rand(20, $this->image_height * 0.7); // y distance
+        $dy       = mt_rand(20, round($this->image_height * 0.7)); // y distance
         $minY     = 20;                                     // minimum y coordinate
         $maxY     = $this->image_height - 20;               // maximum y cooddinate
 
@@ -2275,7 +2275,7 @@ class Securimage
         for ($i = 0; $i < $numpoles; ++ $i) {
             $px[$i]  = ($x + ($dx * $i)) % $maxX;
             $py[$i]  = ($y + ($dy * $i)) % $maxY + $minY;
-            $rad[$i] = mt_rand($this->image_height * 0.4, $this->image_height * 0.8);
+            $rad[$i] = mt_rand(floor($this->image_height * 0.4), ceil($this->image_height * 0.8));
             $tmp     = ((- $this->frand()) * 0.15) - .15;
             $amp[$i] = $this->perturbation * $tmp;
         }
@@ -2308,10 +2308,10 @@ class Securimage
                 $x *= $this->iscale;
                 $y *= $this->iscale;
                 if ($x >= 0 && $x < $width2 && $y >= 0 && $y < $height2) {
-                    $c = imagecolorat($this->tmpimg, $x, $y);
+                    $c = imagecolorat($this->tmpimg, round($x), round($y));
                 }
                 if ($c != $bgCol) { // only copy pixels of letters to preserve any background image
-                    imagesetpixel($this->im, $ix, $iy, $c);
+                    imagesetpixel($this->im, round($ix), round($iy), $c);
                 }
             }
         }
@@ -2325,7 +2325,7 @@ class Securimage
         for ($line = 0; $line < $this->num_lines; ++ $line) {
             $x = $this->image_width * (1 + $line) / ($this->num_lines + 1);
             $x += (0.5 - $this->frand()) * $this->image_width / $this->num_lines;
-            $y = mt_rand($this->image_height * 0.1, $this->image_height * 0.9);
+            $y = mt_rand(floor($this->image_height * 0.1), ceil($this->image_height * 0.9));
 
             $theta = ($this->frand() - 0.5) * M_PI * 0.33;
             $w = $this->image_width;
@@ -2349,7 +2349,7 @@ class Securimage
             for ($i = 0; $i < $n; ++ $i) {
                 $x = $x0 + $i * $dx + $amp * $dy * sin($k * $i * $step + $phi);
                 $y = $y0 + $i * $dy - $amp * $dx * sin($k * $i * $step + $phi);
-                imagefilledrectangle($this->im, $x, $y, $x + $lwid, $y + $lwid, $this->gdlinecolor);
+                imagefilledrectangle($this->im, round($x), round($y), round($x + $lwid), round($y + $lwid), $this->gdlinecolor);
             }
         }
     }
