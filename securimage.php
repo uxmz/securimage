@@ -3030,13 +3030,17 @@ class Securimage
             if (!$result) {
                 $err = $this->pdo_conn->errorInfo();
                 trigger_error("Failed to create table.  {$err[1]}: {$err[2]}", E_USER_WARNING);
-                $this->pdo_conn->rollBack();
+                if ($this->pdo_conn->inTransaction()) {
+                    $this->pdo_conn->rollBack();
+                }
                 $this->pdo_conn = false;
                 return false;
             }
         }
 
-        $this->pdo_conn->commit();
+        if ($this->pdo_conn->inTransaction()) {
+            $this->pdo_conn->commit();
+        }
 
         return true;
     }
