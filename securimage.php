@@ -1197,11 +1197,11 @@ class Securimage
     public static function getCaptchaId($new = true, array $options = array())
     {
         if (is_null($new) || (bool)$new == true) {
-            $id = sha1(uniqid($this->clientIp(), true));
             $opts = array('no_session'    => true,
                           'use_database'  => true);
             if (sizeof($options) > 0) $opts = array_merge($options, $opts);
             $si = new self($opts);
+            $id = sha1(uniqid($si->clientIp(), true));
             Securimage::$_captchaId = $id;
             $si->createCode();
 
