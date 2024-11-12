@@ -923,9 +923,6 @@ class Securimage
      */
     protected $code_display;
 
-    protected $code_entered;
-    protected $correct_code;
-
     /**
      * Alternate text to draw as the captcha image text
      *
@@ -1176,33 +1173,16 @@ class Securimage
     }
 
     /**
-     * Generate a new captcha ID or retrieve the current ID (if exists).
+     * Generate a captcha ID from user IP
      *
-     * @param bool $new If true, generates a new challenge and returns and ID.  If false, the existing captcha ID is returned, or null if none exists.
-     * @param array $options Additional options to be passed to Securimage.
-     *   $options must include database settings if they are not set directly in securimage.php
-     *
-     * @return null|string Returns null if no captcha id set and new was false, or the captcha ID
+     * @return string Returns null if no captcha id set and new was false, or the captcha ID
      */
-    public function getCaptchaId($new = true, array $options = [])
+    public function getCaptchaId()
     {
         $ip = $this->clientIp();
 
-        if ($new == true) {
-            $opts = [
-                'no_session'    => true,
-                'use_database'  => true
-            ];
-
-            if (sizeof($options) > 0) {
-                $opts = array_merge($options, $opts);
-            }
-
-            $si = new self($opts);
-            $si->createCode();
-
-            $id = sha1(uniqid($ip, true));
-            return $id;
+        if (empty($ip)) {
+            $ip = md5(uniqid(microtime()));
         }
 
         return sha1($ip);
@@ -1223,12 +1203,17 @@ class Securimage
      *     $img->show(); // sends the image and appropriate headers to browser
      *     exit;
      */
-    public function show($background_image = '')
+    public function show($background_image = '', $new=false)
     {
         set_error_handler([&$this, 'errorHandler']);
 
         if($background_image != '' && is_readable($background_image)) {
             $this->bgimg = $background_image;
+        }
+
+        if ($new) {
+            $this->openDatabase();
+            $this->clearCodeFromDatabase();
         }
 
         $this->doImage();
@@ -1237,11 +1222,11 @@ class Securimage
     /**
      * Checks a given code against the correct value from the session and/or database.
      *
-     * @param string $code  The captcha code to check
+     * @param string $code_entered  The captcha code to check
      *
-     *     $code = $_POST['code'];
+     *     $code_entered = $_POST['code'];
      *     $img  = new Securimage();
-     *     if ($img->check($code) == true) {
+     *     if ($img->check($code_entered) == true) {
      *         $captcha_valid = true;
      *     } else {
      *         $captcha_valid = false;
@@ -1249,16 +1234,14 @@ class Securimage
      *
      * @return bool true if the given code was correct, false if not.
      */
-    public function check($code)
+    public function check($code_entered)
     {
-        if (!is_string($code)) {
-            trigger_error("The \$code parameter passed to Securimage::check() must be a string, " . gettype($code) . " given", E_USER_NOTICE);
-            $code = '';
+        if (!is_string($code_entered)) {
+            trigger_error("The \$code_entered parameter passed to Securimage::check() must be a string, " . gettype($code_entered) . " given", E_USER_NOTICE);
+            $code_entered = '';
         }
 
-        $this->code_entered = $code;
-        $this->validate();
-        return $this->correct_code;
+        return $this->validate($code_entered);
     }
 
     /**
@@ -1791,26 +1774,22 @@ class Securimage
 
         $code = '';
 
-        if ($this->getCaptchaId(false) !== null) {
-            // a captcha Id was supplied
+        // check to see if a display_value for the captcha image was set
+        if (is_string($this->display_value) && strlen($this->display_value) > 0) {
+            $this->code_display = $this->display_value;
+            $this->code         = ($this->case_sensitive) ?
+                                    $this->display_value   :
+                                    strtolower($this->display_value);
+            $code = $this->code;
+        } elseif ($this->openDatabase()) {
+            // no display_value, check the database for existing captchaId
+            $code = $this->getCodeFromDatabase();
 
-            // check to see if a display_value for the captcha image was set
-            if (is_string($this->display_value) && strlen($this->display_value) > 0) {
-                $this->code_display = $this->display_value;
-                $this->code         = ($this->case_sensitive) ?
-                                       $this->display_value   :
-                                       strtolower($this->display_value);
-                $code = $this->code;
-            } elseif ($this->openDatabase()) {
-                // no display_value, check the database for existing captchaId
-                $code = $this->getCodeFromDatabase();
-
-                // got back a result from the database with a valid code for captchaId
-                if (is_array($code)) {
-                    $this->code         = $code['code'];
-                    $this->code_display = $code['code_disp'];
-                    $code = $code['code'];
-                }
+            // got back a result from the database with a valid code for captchaId
+            if (is_array($code)) {
+                $this->code         = $code['code'];
+                $this->code_display = $code['code_disp'];
+                $code = $code['code'];
             }
         }
 
@@ -2572,11 +2551,11 @@ class Securimage
      * Checks the entered code against the value stored in the session and/or database (if configured).  Handles case sensitivity.
      * Also removes the code from session/database if the code was entered correctly to prevent re-use attack.
      *
-     * This function does not return a value.
+     * @param string $code_entered  The captcha code to check
+     * @return boolean If code is valid
      *
-     * @see Securimage::$correct_code 'correct_code' property
      */
-    protected function validate()
+    protected function validate($code_entered)
     {
         if (!is_string($this->code) || strlen($this->code) == 0) {
             $code = $this->getCode(true);
@@ -2603,29 +2582,37 @@ class Securimage
             $this->case_sensitive = true;
         }
 
-        $code_entered = trim( (($this->case_sensitive) ? $this->code_entered
-                                                       : strtolower($this->code_entered))
-                        );
-        $this->correct_code = false;
+        $code_entered = trim(
+            (
+                $this->case_sensitive
+                    ? $code_entered
+                    : strtolower($code_entered)
+            )
+        );
 
-        if ($code != '') {
-            if (strpos($code, ' ') !== false) {
-                // for multi word captchas, remove more than once space from input
-                $code_entered = preg_replace('/\s+/', ' ', $code_entered);
-                $code_entered = strtolower($code_entered);
-            }
-
-            if ((string)$code === (string)$code_entered) {
-                $this->correct_code = true;
-                if ($this->no_session != true) {
-                    $_SESSION['securimage_code_disp'] [$this->namespace] = '';
-                    $_SESSION['securimage_code_value'][$this->namespace] = '';
-                    $_SESSION['securimage_code_ctime'][$this->namespace] = '';
-                    $_SESSION['securimage_code_audio'][$this->namespace] = '';
-                }
-                $this->clearCodeFromDatabase();
-            }
+        if (empty($code)) {
+            return false;
         }
+
+        if (strpos($code, ' ') !== false) {
+            // for multi word captchas, remove more than once space from input
+            $code_entered = preg_replace('/\s+/', ' ', $code_entered);
+            $code_entered = strtolower($code_entered);
+        }
+
+        if ((string)$code !== (string)$code_entered) {
+            return false;
+        }
+
+        if ($this->no_session != true) {
+            $_SESSION['securimage_code_disp'] [$this->namespace] = '';
+            $_SESSION['securimage_code_value'][$this->namespace] = '';
+            $_SESSION['securimage_code_ctime'][$this->namespace] = '';
+            $_SESSION['securimage_code_audio'][$this->namespace] = '';
+        }
+
+        $this->clearCodeFromDatabase();
+        return true;
     }
 
     /**
@@ -2640,7 +2627,7 @@ class Securimage
                 unset($_SESSION['securimage_code_ctime']);
             }
 
-            $_SESSION['securimage_code_disp'] [$this->namespace] = $this->code_display;
+            $_SESSION['securimage_code_disp'][$this->namespace] = $this->code_display;
             $_SESSION['securimage_code_value'][$this->namespace] = $this->code;
             $_SESSION['securimage_code_ctime'][$this->namespace] = time();
             $_SESSION['securimage_code_audio'][$this->namespace] = null; // clear previous audio, if set
@@ -2701,8 +2688,7 @@ class Securimage
         $this->openDatabase();
 
         if ($this->use_database && $this->pdo_conn) {
-            $id = $this->getCaptchaId(false);
-
+            $id = $this->getCaptchaId();
             $time      = time();
             $code      = $this->code;
             $code_disp = $this->code_display;
@@ -2748,7 +2734,7 @@ class Securimage
         $this->openDatabase();
 
         if ($this->use_database && $this->pdo_conn) {
-            $id = $this->getCaptchaId(false);
+            $id = $this->getCaptchaId();
             $ns = $this->namespace;
 
             $query = "UPDATE {$this->database_table} SET audio_data = :audioData WHERE id = :id AND namespace = :namespace";
@@ -3004,7 +2990,7 @@ class Securimage
         $code = '';
 
         if ($this->use_database == true && $this->pdo_conn) {
-            $id = $this->getCaptchaId(false);
+            $id = $this->getCaptchaId();
             $ns = $this->namespace;
 
             // ip is stored in id column
@@ -3045,11 +3031,15 @@ class Securimage
      */
     protected function clearCodeFromDatabase()
     {
-        if ($this->pdo_conn) {
+        if ($this->use_database && $this->pdo_conn) {
+            $id = $this->getCaptchaId();
+            $ns = $this->namespace;
+
             $query = "DELETE FROM `{$this->database_table}` WHERE id = :id AND namespace = :namespace";
             $stmt  = $this->pdo_conn->prepare($query);
             $stmt->bindParam(':id', $id);
             $stmt->bindParam(':namespace', $ns);
+
             $success = $stmt->execute();
 
             if (!$success) {
