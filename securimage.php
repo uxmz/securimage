@@ -1194,6 +1194,7 @@ class Securimage
      * Appropriate headers will be sent to the browser unless the *send_headers* option is false.
      *
      * @param string $background_image The absolute or relative path to the background image to use as the background of the captcha image.
+     * @param boolean $new Either to show a new image
      *
      *     $img = new Securimage();
      *     $img->code_length = 6;
@@ -1203,7 +1204,7 @@ class Securimage
      *     $img->show(); // sends the image and appropriate headers to browser
      *     exit;
      */
-    public function show($background_image = '', $new=false)
+    public function show($background_image = '', $new=true)
     {
         set_error_handler([&$this, 'errorHandler']);
 
