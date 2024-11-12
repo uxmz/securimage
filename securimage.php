@@ -1186,7 +1186,7 @@ class Securimage
      */
     public function getCaptchaId($new = true, array $options = [])
     {
-        $id = sha1(uniqid($this->clientIp(), true));
+        $ip = $this->clientIp();
 
         if ($new == true) {
             $opts = [
@@ -1201,10 +1201,11 @@ class Securimage
             $si = new self($opts);
             $si->createCode();
 
+            $id = sha1(uniqid($ip, true));
             return $id;
         }
 
-        return $id;
+        return sha1($ip);
     }
 
     /**
