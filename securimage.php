@@ -2716,7 +2716,7 @@ class Securimage
             // without having to do INSERT ... ON DUPLICATE KEY or a find/update
             $this->clearCodeFromDatabase();
 
-            $query = "INSERT INTO {$this->database_table} ("
+            $query = "REPLACE INTO {$this->database_table} ("
                     ."id, code, code_display, namespace, created) "
                     ."VALUES(?, ?, ?, ?, ?)";
 
