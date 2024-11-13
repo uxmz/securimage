@@ -484,6 +484,13 @@ class Securimage
     public $expiry_time    = 900;
 
     /**
+     * To renew image on each display
+     *
+     * @var boolean
+     */
+    public $renew_captcha    = true;
+
+    /**
      * The session name securimage should use.
      *
      * Only use if your application uses a custom session name (e.g. Joomla).
@@ -1194,7 +1201,6 @@ class Securimage
      * Appropriate headers will be sent to the browser unless the *send_headers* option is false.
      *
      * @param string $background_image The absolute or relative path to the background image to use as the background of the captcha image.
-     * @param boolean $new Either to show a new image
      *
      *     $img = new Securimage();
      *     $img->code_length = 6;
@@ -1204,7 +1210,7 @@ class Securimage
      *     $img->show(); // sends the image and appropriate headers to browser
      *     exit;
      */
-    public function show($background_image = '', $new=true)
+    public function show($background_image = '')
     {
         set_error_handler([&$this, 'errorHandler']);
 
@@ -1212,11 +1218,7 @@ class Securimage
             $this->bgimg = $background_image;
         }
 
-        if ($new) {
-            $this->openDatabase();
-            $this->clearCodeFromDatabase();
-        }
-
+        $this->renewCaptcha();
         $this->doImage();
     }
 
@@ -1743,6 +1745,21 @@ class Securimage
         }
 
         return '';
+    }
+
+    protected function renewCaptcha()
+    {
+        if (!$this->renew_captcha) {
+            return;
+        }
+
+        $_SESSION['securimage_code_disp'] [$this->namespace] = '';
+        $_SESSION['securimage_code_value'][$this->namespace] = '';
+        $_SESSION['securimage_code_ctime'][$this->namespace] = '';
+        $_SESSION['securimage_code_audio'][$this->namespace] = '';
+
+        $this->openDatabase();
+        $this->clearCodeFromDatabase();
     }
 
     /**

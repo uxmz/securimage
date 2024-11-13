@@ -84,4 +84,6 @@ return array(
     //'audio_use_noise'  => true,
     //'audio_noise_path' => __DIR__ . '/audio/noise/',
     //'degrade_audio' => true,
+
+    'renew_captcha' => true
 );
