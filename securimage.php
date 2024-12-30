@@ -33,10 +33,7 @@
  * Any modifications to the library should be indicated clearly in the source code
  * to inform users that the changes are not a part of the original software.
  *
- * @link https://www.phpcaptcha.org Securimage Homepage
- * @link https://www.phpcaptcha.org/latest.zip Download Latest Version
  * @link https://github.com/dapphp/securimage GitHub page
- * @link https://www.phpcaptcha.org/Securimage_Docs/ Online Documentation
  * @copyright 2018 Drew Phillips
  * @author Drew Phillips <drew@drew-phillips.com>
  * @version 3.6.8 (May 2020)
@@ -1016,6 +1013,11 @@ class Securimage
      * @var int
      */
     protected $gdlinecolor;
+
+    /**
+     * The GD color for image background noise
+     */
+    protected $gdnoisecolor;
 
     /**
      * The GD color for the signature text color
@@ -2220,7 +2222,7 @@ class Securimage
         $maxX     = $this->image_width - $x;  // maximum x coordinate of a pole
         $dx       = mt_rand(floor($x / 10), ceil($x));     // horizontal distance between poles
         $y        = mt_rand(20, $this->image_height - 20);  // random y coord
-        $dy       = mt_rand(20, round($this->image_height * 0.7)); // y distance
+        $dy       = mt_rand(20, round($this->image_height * 0.7, 0)); // y distance
         $minY     = 20;                                     // minimum y coordinate
         $maxY     = $this->image_height - 20;               // maximum y cooddinate
 
@@ -2261,7 +2263,7 @@ class Securimage
                 $x *= $this->iscale;
                 $y *= $this->iscale;
                 if ($x >= 0 && $x < $width2 && $y >= 0 && $y < $height2) {
-                    $c = imagecolorat($this->tmpimg, round($x), round($y));
+                    $c = imagecolorat($this->tmpimg, round($x, 0), round($y, 0));
                 }
                 if ($c != $bgCol) { // only copy pixels of letters to preserve any background image
                     imagesetpixel($this->im, round($ix), round($iy), $c);
@@ -2278,7 +2280,7 @@ class Securimage
         for ($line = 0; $line < $this->num_lines; ++ $line) {
             $x = $this->image_width * (1 + $line) / ($this->num_lines + 1);
             $x += (0.5 - $this->frand()) * $this->image_width / $this->num_lines;
-            $y = mt_rand(floor($this->image_height * 0.1), ceil($this->image_height * 0.9));
+            $y = mt_rand(floor($this->image_height * 0.1), floor($this->image_height * 0.9));
 
             $theta = ($this->frand() - 0.5) * M_PI * 0.33;
             $w = $this->image_width;
@@ -2302,7 +2304,7 @@ class Securimage
             for ($i = 0; $i < $n; ++ $i) {
                 $x = $x0 + $i * $dx + $amp * $dy * sin($k * $i * $step + $phi);
                 $y = $y0 + $i * $dy - $amp * $dx * sin($k * $i * $step + $phi);
-                imagefilledrectangle($this->im, round($x), round($y), round($x + $lwid), round($y + $lwid), $this->gdlinecolor);
+                imagefilledrectangle($this->im, round($x, 0), round($y, 0), round($x + $lwid, 0), round($y + $lwid, 0), $this->gdlinecolor);
             }
         }
     }

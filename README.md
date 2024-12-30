@@ -8,55 +8,30 @@
 
 ## Project Status
 
+Securimage is no longer maintained. Seek an alternative such as [hCaptcha](https://hcaptcha.com/).
+
+You may use, modify, and distribute the code in accordance with the [license](LICENSE.txt).
+
 See the [Project Status](https://github.com/dapphp/securimage/issues/99) issue on GitHub.
 
 ## Download
 
-Download and browse the code at https://github.com/dapphp/securimage.
-Beta code is available at https://github.com/dapphp/securimage/tree/nextgen.
+The code will remain available to view and download at https://github.com/dapphp/securimage.
 
-Other information is available at [phpcaptcha.org](https://www.phpcaptcha.org)
+To use or modify the code, start with the 4.0 (nextgen) branch. It has many features and additions so the
+3.6 branch should be considered even more obsolete.
 
-## Documentation
-
-Online documentation of the class, methods, and variables can be found 
-at http://www.phpcaptcha.org/Securimage_Docs/
 
 ## Requirements
 
-* PHP 5.4 or greater
+* PHP 5.6 or greater
 * GD  2.0
 * FreeType (Required, for TTF fonts)
 * PDO (if using Sqlite, MySQL, or PostgreSQL)
 
 ## Synopsis
-    
-**Within your HTML form**
-    
-    <form method="post" action="">
-    .. form elements
-    
-    <div>
-        <?php
-            require_once 'securimage.php';
-            echo Securimage::getCaptchaHtml();
-        ?>
-    </div>
-    </form>
-   
-    
-**Within your PHP form processor**
 
-    require_once 'securimage.php';
-
-    // Code Validation
-
-    $image = new Securimage();
-    if ($image->check($_POST['captcha_code']) == true) {
-      echo "Correct!";
-    } else {
-      echo "Sorry, wrong code.";
-    }
+See the [example form](example_form.php) to get started. PHP sessions are not required if database storage is used instead.
 
 ## Description
 
@@ -71,7 +46,7 @@ session storage.
 Variables within the class are used to control the style and display of the
 image.  The class uses TTF fonts and effects for strengthening the security of
 the image.
-    
+
 It also creates audible codes which are played for visually impared users.
 
 ## UPGRADE NOTICE
@@ -245,3 +220,24 @@ http://www.soundjay.com/tos.html
      If you use the sound effects, please consider giving us a credit and
      linking back to us but it's not required.
      
+## Sync Fork
+https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/merging-an-upstream-repository-into-your-fork
+
+```
+$ git pull upstream TAG_NANE
+$ git push
+
+$ git fetch -t upstream
+$ git remote update
+$ git push --tags
+```
+
+Create Release on GitHub
+
+### UXMZ Diff
+On Files:
+- securimage.php
+
+https://github.com/uxmz/securimage/commit/66793d2549a21fa6d1b462063d661627e47ae144
+https://github.com/uxmz/securimage/commit/f2919e729c1c36f044ae0557ca9059bf6c55f9ba
+https://github.com/uxmz/securimage/commit/2bc0cdb31473ab99b15824095cbc5e89782ec333
